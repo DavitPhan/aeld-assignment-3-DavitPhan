@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -d "$1" ] && [ -n "$2" ]
+if [[ -d "$1" && -n "$2" ]]
 then
     x=$(grep -rc "$2" "$1" | grep -v ":0" | wc -l)
     # TODO: change the 3rd grep.
