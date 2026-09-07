@@ -1,27 +1,13 @@
 #!/bin/bash
-# writer.sh - Writes a specified string to a file, creating directories if needed
 
-# Check if both arguments were provided
-if [ $# -lt 2 ]; then
-    echo "Error: Two arguments required."
-    echo "Usage: $0 <writefile> <writestr>"
-    exit 1
-fi
-
-writefile=$1
-writestr=$2
-
-# Extract the directory path from the full file path
-dirpath=$(dirname "$writefile")
-
-# Create the directory path if it doesn't already exist
-if ! mkdir -p "$dirpath"; then
-    echo "Error: Could not create directory path '$dirpath'."
-    exit 1
-fi
-
-# Write the string to the file, overwriting any existing file
-if ! echo "$writestr" > "$writefile"; then
-    echo "Error: Could not write to file '$writefile'."
+if [ -d "$1" ] && [ -n "$2" ]
+then
+    x=$(grep -rc "$2" "$1" | grep -v ":0" | wc -l)
+    # TODO: change the 3rd grep.
+    # AWK command found on stackoverflow: https://stackoverflow.com/questions/2702564/how-can-i-quickly-sum-all-numbers-in-a-file
+    y=$(grep -rc "$2" "$1" | grep -v ":0" | grep -oE [0-9]+$ | awk '{ sum += $1 } END { print sum }')
+    echo The number of files are $x and the number of matching lines are $y
+    exit 0
+else
     exit 1
 fi
