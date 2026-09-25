@@ -1,4 +1,10 @@
 #include "systemcalls.h"
+#include <sys/types.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <wait.h>
+
 
 /**
  * @param cmd the command to execute with system()
@@ -16,7 +22,11 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
+    int status = system(cmd);
 
+    if (status == -1){
+        return false;
+    }
     return true;
 }
 
@@ -59,9 +69,34 @@ bool do_exec(int count, ...)
  *
 */
 
+
+    // char * remainingCommands[count];
+    // for (int i=1; i < count; i++){
+    //     remainingCommands[i-1] = command[i];
+    // }
+
     va_end(args);
 
-    return true;
+    fflush(stdout);
+    pid_t pid = fork();
+
+    if (pid < 0){
+        perror("Could not create child process");
+        return false;
+    }else if (pid == 0){
+        printf("Child process: %s %s \n",command[0], command[1]);
+        execv(command[0],command);
+        perror("exec failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int status;
+    if (waitpid(pid, &status, 0) == -1) {
+        perror("waitpid failed");
+        return false;
+    }
+
+    return (WEXITSTATUS(status) == 0);
 }
 
 /**
@@ -92,8 +127,42 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    // Source - https://stackoverflow.com/a/13784315
+// Posted by tmyklebu, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-09-25, License - CC BY-SA 3.0
+
+    // char * remainingCommands[count];
+    // for (int i=1; i < count; i++){
+    //     remainingCommands[i-1] = command[i];
+    // }
 
     va_end(args);
 
-    return true;
+    int kidpid;
+    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+    if (fd < 0) { perror("open"); abort(); }
+
+    switch (kidpid = fork()) {
+    case -1: perror("fork"); 
+            abort();
+    case 0:
+        if (dup2(fd, 1) < 0) { 
+            perror("dup2"); abort();
+        }
+        close(fd);
+        execv(command[0], command); perror("execvp"); abort();
+    default:
+        close(fd);
+        /* do whatever the parent wants to do. */
+    }
+
+    close(fd);
+
+    int status;
+    if (waitpid(kidpid, &status, 0) == -1) {
+        perror("waitpid failed");
+        return false;
+    }
+
+    return (WEXITSTATUS(status) == 0);
 }
