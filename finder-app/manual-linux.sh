@@ -101,7 +101,7 @@ sudo mknod -m 666 dev/null c 1 3
 sudo mknod -m 600 dev/console c 5 1
 
 # Clean and build the writer utility
-cd /home/davitphan/cuBoulder/assignment-1-DavitPhan/finder-app
+cd "${FINDER_APP_DIR}"
 make clean
 make CROSS_COMPILE=${CROSS_COMPILE}
 
