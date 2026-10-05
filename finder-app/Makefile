@@ -1,8 +1,5 @@
-ifeq ($(CROSS_COMPILE),aarch64-none-linux-gnu-)
-    CC := $(CROSS_COMPILE)gcc
-else
-	CC := cc
-endif
+CC ?= $(CROSS_COMPILE)gcc
+all: writer
 
 writer : writer.o
 	$(CC) -o writer writer.o
